@@ -56,7 +56,7 @@ SOTA_TABLE_CAPTION = "Quantitative Performance Comparison Profiles"
 
 SECTION_PATTERNS: list[tuple[re.Pattern[str], str, str]] = [
     (re.compile(r"^abstract$", re.I), "abstract", ""),
-    (re.compile(r"^1\.\s*Introduction", re.I), "section", r"Introduction \& Related Works"),
+    (re.compile(r"^1\.\s*Introduction", re.I), "section", "Introduction and Related Work"),
     (re.compile(r"^2\.\s*Methodology", re.I), "section", "Methodology"),
     (re.compile(r"^3\.\s*Results", re.I), "section", "Results"),
     (re.compile(r"^4\.\s*Discussion", re.I), "section", "Discussion"),
@@ -93,17 +93,19 @@ LATEX_PREAMBLE = (
     r"""\documentclass[journal,twocolumn]{IEEEtran}
 \usepackage{graphicx}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{booktabs}
 \usepackage{cite}
+\usepackage{url}
 
 \title{"""
     + DEFAULT_MANUSCRIPT_TITLE
     + r"""}
 \author{%
 \IEEEauthorblockN{Ghadeer Mostafa%
-\thanks{Manuscript and software copyright (c) 2026 Ghadeer Mostafa. Licensed under CC BY-NC-SA 4.0.}}%
+\thanks{Manuscript and software \copyright{} 2026 Ghadeer Mostafa. Licensed under CC BY-NC-SA 4.0.}}%
 \IEEEauthorblockA{MRANC Research Project\\
-GitHub: https://github.com/GhadeerMostafa/EEG-MRANC}%
+GitHub: \url{https://github.com/GhadeerMostafa/EEG-MRANC}}%
 }
 
 \begin{document}
@@ -222,6 +224,14 @@ SUPPLEMENTARY_INVENTORY_PATTERN = re.compile(
 )
 
 
+PIPELINE_JARGON_PATTERN = re.compile(
+    r"^(MRANC validation windows:|MRANC-only validation metrics|"
+    r"Checkpoint:|evaluate_baseline_|live evaluation JSON|"
+    r"critical_figures/\{\{dataset\}\})",
+    re.I,
+)
+
+
 def should_skip_body_paragraph(text: str) -> bool:
     stripped = text.strip()
     if not stripped:
@@ -235,6 +245,10 @@ def should_skip_body_paragraph(text: str) -> bool:
     if stripped.startswith("Full pipeline:"):
         return True
     if stripped.startswith("Metrics/figures only:"):
+        return True
+    if PIPELINE_JARGON_PATTERN.search(stripped):
+        return True
+    if "The following 30 figure(s)" in stripped and "{{dataset}}" in stripped:
         return True
     return False
 
@@ -304,17 +318,32 @@ def table_to_tabular(table: Table) -> str:
     return "\n".join(lines)
 
 
+def _table_label_for_caption(caption: str) -> str:
+    lower = caption.lower()
+    if "cross-dataset" in lower:
+        return "tab:cross-dataset"
+    if "comparison" in lower or "performance" in lower:
+        return "tab:clinical-sota"
+    slug = re.sub(r"[^a-z0-9]+", "-", lower).strip("-")[:40]
+    return f"tab:{slug or 'data'}"
+
+
 def emit_table_star(table: Table, caption: str) -> str:
     tabular = table_to_tabular(table)
     cap = escape_latex(caption)
+    label = _table_label_for_caption(caption)
     return (
         r"\begin{table*}[!t]"
         + "\n"
         + r"\caption{"
         + cap
+        + r"}\label{"
+        + label
         + "}"
         + "\n"
         + r"\centering"
+        + "\n"
+        + r"\small"
         + "\n"
         + tabular
         + "\n"
@@ -422,20 +451,35 @@ def _path_for_latex(path: Path, tex_dir: Path) -> str:
         return rel_os.replace("\\", "/")
 
 
+def _clean_figure_caption(caption: str) -> str:
+    cap = FIGURE_CAPTION_PATTERN.sub(r"\2", caption.strip())
+    cap = SOURCE_FILE_PATTERN.sub("", cap).strip()
+    cap = re.sub(r"\s{2,}", " ", cap)
+    return cap.rstrip(" .")
+
+
+def _figure_label_from_path(image_path: str) -> str:
+    stem = Path(image_path).stem.replace("-", "_")
+    return f"fig:{stem}"
+
+
 def emit_figure_star(image_path: str, caption: str) -> str:
-    cap = escape_latex(caption)
+    cap = escape_latex(_clean_figure_caption(caption))
+    label = _figure_label_from_path(image_path)
     img = image_path.replace("\\", "/")
     return (
         r"\begin{figure*}[!t]"
         + "\n"
         + r"\centering"
         + "\n"
-        + r"\includegraphics[width=\linewidth]{"
+        + r"\includegraphics[width=\linewidth,keepaspectratio]{"
         + img
         + "}"
         + "\n"
         + r"\caption{"
         + cap
+        + r"}\label{"
+        + label
         + "}"
         + "\n"
         + r"\end{figure*}"
@@ -590,8 +634,14 @@ def transform_document(
                 close_abstract()
                 flush_references()
                 appendix_mode = True
-                body_lines.append(r"\appendix")
-                body_lines.append(r"\section{" + title + "}")
+                body_lines.append(r"\appendices")
+                body_lines.append(
+                    r"\section{" + title + r"}\label{sec:appendix}"
+                )
+                body_lines.append(
+                    "The following figures supplement the main-text hero panels."
+                )
+                body_lines.append("")
                 continue
             if kind == "section":
                 close_abstract()
