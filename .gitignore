@@ -1,0 +1,132 @@
+# --- Python / tooling ---
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE / local editor
+.cursor/
+**/.cursor/
+.cursor/**/*
+*.plan.md
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# --- Model weights ---
+*.pth
+*.pt
+*.ckpt
+
+# --- Canonical v2 data layout (keep structure via .gitkeep) ---
+data/raw/**/*
+!data/raw/**/.gitkeep
+data/processed/**/*
+!data/processed/**/.gitkeep
+
+# --- Legacy data paths (pre-v2; remove after migration) ---
+deap_raw/*
+!deap_raw/.gitkeep
+seed_raw/*
+!seed_raw/.gitkeep
+raw_clinical_data/*
+!raw_clinical_data/.gitkeep
+processed_data/*
+!processed_data/.gitkeep
+processed_data_seed/*
+!processed_data_seed/.gitkeep
+processed_clinical_data/*
+!processed_clinical_data/.gitkeep
+data/artifact_benchmark/raw/*
+!data/artifact_benchmark/raw/.gitkeep
+data/artifact_benchmark/processed/*
+!data/artifact_benchmark/processed/.gitkeep
+
+# Legacy six-stem layout
+dataset/train/*
+!dataset/train/.gitkeep
+dataset/val/*
+!dataset/val/.gitkeep
+
+# Download scratch
+.seeda_workspace/
+
+# Residual development scratch
+output/
+output/**
+.tmp_sonification/
+sonification_exports/
+*.tmp
+*.temp
+
+# --- Canonical v2 artifacts ---
+artifacts/**
+!artifacts/**/
+!artifacts/**/.gitkeep
+!artifacts/figures/manuscript/README.txt
+
+# Legacy artifact paths (pre-v2)
+checkpoints/*
+!checkpoints/.gitkeep
+!checkpoints/stacking_latest.json
+weights/*
+!weights/.gitkeep
+figures/**
+!figures/**/
+!figures/**/.gitkeep
+!figures/README.txt
+critical_figures/**
+!critical_figures/**/
+!critical_figures/**/.gitkeep
+outputs/**
+!outputs/**/
+!outputs/**/.gitkeep
+
+# Research report artifacts
+**/MRANC_Final_Research_Report.docx
+**/MRANC_Final_Research_Report.tex
+!docs/manuscript/MRANC_Final_Research_Report.tex
+artifacts/reports/latex/
+
+# Offline PyTorch wheel cache
+wheels/
+
+# Large numpy archives
+*.npy
+*.npz
+
+# Audio exports
+*.wav
+
+# Raster figures
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pdf
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+
+# Keep stacking manifest in canonical or legacy location
+!artifacts/models/checkpoints/stacking_latest.json

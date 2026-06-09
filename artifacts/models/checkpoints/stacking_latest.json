@@ -1,0 +1,101 @@
+{
+  "latest": {
+    "phase1_artifact_benchmark": "artifacts/models/checkpoints\\best_mranc_artifact_benchmark_weights_20260530_full.pth",
+    "phase2_deap": "artifacts/models/checkpoints\\best_mranc_phase2_deap_20260530_full.pth",
+    "phase3_seed": "artifacts/models/checkpoints\\best_mranc_phase3_seed_20260530_full.pth",
+    "phase4_clinical_attention": "artifacts/models/weights\\mranc_final_attention_20260530_full.pth",
+    "baseline_eegdenoisenet": "artifacts/models/checkpoints\\baseline_eegdenoisenet_20260529_163148.pth"
+  },
+  "history": [
+    {
+      "run_id": "20260529_my_run",
+      "phase": "phase1_artifact_benchmark",
+      "path": "artifacts/models/checkpoints\\best_mranc_artifact_benchmark_weights_20260529_my_run.pth",
+      "recorded_at": "2026-05-29T15:59:47"
+    },
+    {
+      "run_id": "20260529_my_run",
+      "phase": "phase1_artifact_benchmark",
+      "path": "artifacts/models/checkpoints\\best_mranc_artifact_benchmark_weights_20260529_my_run_001.pth",
+      "recorded_at": "2026-05-29T16:01:34"
+    },
+    {
+      "run_id": "20260529_my_run",
+      "phase": "phase2_deap",
+      "path": "artifacts/models/checkpoints\\best_mranc_phase2_deap_20260529_my_run.pth",
+      "recorded_at": "2026-05-29T16:14:05"
+    },
+    {
+      "run_id": "20260529_my_run",
+      "phase": "phase3_seed",
+      "path": "artifacts/models/checkpoints\\best_mranc_phase3_seed_20260529_my_run.pth",
+      "recorded_at": "2026-05-29T16:14:25"
+    },
+    {
+      "run_id": "20260529_my_run",
+      "phase": "phase4_clinical_attention",
+      "path": "artifacts/models/weights\\mranc_final_attention_20260529_my_run.pth",
+      "recorded_at": "2026-05-29T16:15:20"
+    },
+    {
+      "run_id": "20260529_163148",
+      "phase": "baseline_eegdenoisenet",
+      "path": "artifacts/models/checkpoints\\baseline_eegdenoisenet_20260529_163148.pth",
+      "recorded_at": "2026-05-29T17:11:47"
+    },
+    {
+      "run_id": "sync",
+      "phase": "phase1_artifact_benchmark",
+      "path": "artifacts/models/checkpoints\\best_mranc_artifact_benchmark_weights_sync.pth",
+      "recorded_at": "2026-05-29T18:05:46"
+    },
+    {
+      "run_id": "sync",
+      "phase": "phase1_artifact_benchmark",
+      "path": "artifacts/models/checkpoints\\best_mranc_artifact_benchmark_weights_sync_001.pth",
+      "recorded_at": "2026-05-29T18:36:10"
+    },
+    {
+      "run_id": "sync",
+      "phase": "phase2_deap",
+      "path": "artifacts/models/checkpoints\\best_mranc_phase2_deap_sync_001.pth",
+      "recorded_at": "2026-05-29T18:49:28"
+    },
+    {
+      "run_id": "sync",
+      "phase": "phase3_seed",
+      "path": "artifacts/models/checkpoints\\best_mranc_phase3_seed_sync.pth",
+      "recorded_at": "2026-05-29T18:49:49"
+    },
+    {
+      "run_id": "sync",
+      "phase": "phase4_clinical_attention",
+      "path": "artifacts/models/weights\\mranc_final_attention_sync.pth",
+      "recorded_at": "2026-05-29T18:51:01"
+    },
+    {
+      "run_id": "20260530_full",
+      "phase": "phase1_artifact_benchmark",
+      "path": "artifacts/models/checkpoints\\best_mranc_artifact_benchmark_weights_20260530_full.pth",
+      "recorded_at": "2026-05-31T07:48:20"
+    },
+    {
+      "run_id": "20260530_full",
+      "phase": "phase2_deap",
+      "path": "artifacts/models/checkpoints\\best_mranc_phase2_deap_20260530_full.pth",
+      "recorded_at": "2026-05-31T08:04:16"
+    },
+    {
+      "run_id": "20260530_full",
+      "phase": "phase3_seed",
+      "path": "artifacts/models/checkpoints\\best_mranc_phase3_seed_20260530_full.pth",
+      "recorded_at": "2026-05-31T08:04:39"
+    },
+    {
+      "run_id": "20260530_full",
+      "phase": "phase4_clinical_attention",
+      "path": "artifacts/models/weights\\mranc_final_attention_20260530_full.pth",
+      "recorded_at": "2026-05-31T08:06:03"
+    }
+  ]
+}

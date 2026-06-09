@@ -1,0 +1,22 @@
+# MRANC Python dependencies
+# Install: pip install -r requirements.txt
+#
+# Disk: full install needs ~2 GB free on the system drive.
+# If pip fails with "No space left on device", run: pip cache purge
+#
+# PyTorch CUDA (Windows): use .\scripts\install_torch_local.ps1 instead of
+# pip installing torch from PyPI (avoids duplicate large downloads).
+#
+# LaTeX / PDF manuscript (pdflatex) is a separate system dependency.
+# See requirements-latex.txt and scripts/install_latex_local.ps1
+
+torch>=2.0
+numpy>=1.24
+scipy>=1.10
+requests>=2.28
+psutil>=5.9
+matplotlib>=3.7
+pandas>=2.0
+python-docx>=1.1.0
+scikit-learn>=1.3
+mne>=1.6

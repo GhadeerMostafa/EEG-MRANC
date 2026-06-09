@@ -1,0 +1,17 @@
+Clinical Significance of Stem-Wise Decomposition
+
+Neurologists reason about EEG in terms of spatial distribution, morphology, and evolution over time. By exporting four labeled artifact stems plus an explicit cleaned trace, MRANC mirrors clinical mental models. When ocular activity is isolated on Fp1 and adjacent frontopolar derivations, the reader can verify that frontal slowing is not misattributed to eye movement. When EMG bursts are sequestered on temporal and central derivations, muscle contamination during agitation is less likely to be mistaken for epileptiform sharp waves. Cardiac pickup separated into the ECG stem reduces false confidence in rhythmic activity that actually reflects pulse artifact in referential montages.
+
+This stem-wise transparency supports quality control dashboards, seizure-detection pipelines that down-weight intervals flagged by attention and EMG stems, and tele-EEG review platforms that display cleaner traces alongside artifact timelines for remote attendings. None of these integrations are well served by monolithic denoising that returns only a cleaned waveform.
+
+Explainable AI in Regulated Neuro-Monitoring
+
+Explainable artificial intelligence (XAI) is often treated as an optional visualization layer. In clinical neuro-engineering, it is a safety requirement. Post-hoc saliency methods applied to black-box denoisers can produce maps that are not tied to the generative mechanisms inside the model. MRANC embeds explainability in the forward pass: the Multi-Scale Attention Block produces normalized attention weights derived from the same features that drive stem decoders, displayed on the identical time base as the EEG. When attention elevates at the moment of a blink on Fp1, the clinician sees a coherent story: ocular stem activation, attention elevation, and smoothing of the denoised trace.
+
+Information Conservation and Spectral Trust
+
+The exact reconstruction identity provides a formal contract: the mixed signal equals the cleaned EEG plus the sum of artifacts (within numerical tolerance). High alpha/beta PSD correlation further assures that denoising did not blunt clinically relevant rhythms. Interpretation of SNR metrics requires care: SNR improvement measures relative variance redistribution after decomposition, not subjective quality alone. Reporting SNR alongside PSD correlation and stem visualizations mitigates single-metric misreadings.
+
+Limitations and Future Work
+
+This study focuses on 32-channel, windowed preprocessing compatible with the stacked training pipeline. Real-time causal operation, heterogeneous montages beyond the DEAP layout, and prospective multi-site trials remain open. Future work will integrate MRANC into end-to-end seizure detection benchmarks and compare against ICA-LABEL and EEGdenoiseNet under matched information-conservation constraints.

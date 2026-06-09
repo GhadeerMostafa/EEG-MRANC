@@ -1,0 +1,32 @@
+# MRANC LaTeX / PDF manuscript dependencies
+# ==========================================
+# These are SYSTEM packages (not installable via pip).
+# Install before compiling docs/manuscript/MRANC_Final_Research_Report.tex
+#
+# Required command on PATH:
+#   pdflatex
+#
+# Required LaTeX packages (installed automatically by MiKTeX on first compile):
+#   ieeetran, graphicx, amsmath, booktabs, cite
+#
+# Windows (recommended):
+#   .\scripts\install_latex_local.ps1
+#
+# Windows (manual):
+#   winget install MiKTeX.MiKTeX --accept-package-agreements --accept-source-agreements
+#
+# Linux (Debian/Ubuntu):
+#   sudo apt-get install texlive-latex-extra texlive-fonts-recommended
+#
+# macOS (Homebrew):
+#   brew install --cask mactex-no-gui
+#
+# Verify installation:
+#   py scripts/check_dependencies.py
+#   pdflatex --version
+#
+# Compile manuscript PDF:
+#   cd docs/manuscript
+#   pdflatex -interaction=nonstopmode MRANC_Final_Research_Report.tex
+
+pdflatex>=3.141592653
