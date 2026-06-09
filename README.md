@@ -1,3 +1,4 @@
+<meta name="google-site-verification" content="TU1_WKv5q71kFTqop14Gav7YHIKZi_LUnN3BDedGbp4" />
 <p align="center">
   <strong>Multi-Resolution Attention-Guided Neural Cleaner (MRANC)<br>for Real-World Clinical EEG Denoising</strong>
 </p>
