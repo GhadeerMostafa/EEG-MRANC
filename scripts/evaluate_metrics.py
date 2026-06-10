@@ -221,6 +221,11 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Output JSON path (default: outputs/reports/<dataset>/evaluation_report_<dataset>.json)",
     )
+    p.add_argument(
+        "--disable-msab",
+        action="store_true",
+        help="Bypass Multi-Scale Attention Block (identity pass-through) at inference",
+    )
     return p.parse_args()
 
 
@@ -330,13 +335,9 @@ def print_summary_table(
     print("+" + "-" * 33 + "+" + "-" * 12 + "+" + "-" * 12 + "+")
 
 
-def evaluate_dataset(dataset: str, args: argparse.Namespace) -> None:
+def evaluate_dataset_report(dataset: str, args: argparse.Namespace) -> dict:
     data_dir = resolve_data_dir(dataset, args)
     checkpoint_path = resolve_checkpoint_path(dataset, args.checkpoint)
-    if args.output is None:
-        output_path = REPORTS_DATASET_DIRS[dataset] / f"evaluation_report_{dataset}.json"
-    else:
-        output_path = Path(args.output)
     device = resolve_device(args.device)
 
     n_total = dataset_length(data_dir)
@@ -361,7 +362,7 @@ def evaluate_dataset(dataset: str, args: argparse.Namespace) -> None:
 
         x = torch.from_numpy(mix_batch).to(device)
         with torch.no_grad():
-            out = model(x)
+            out = model(x, disable_msab=args.disable_msab)
 
         ref_eog_b = ref_emg_b = ref_ecg_b = None
         if dataset not in ("clinical", "artifact_benchmark"):
@@ -442,11 +443,30 @@ def evaluate_dataset(dataset: str, args: argparse.Namespace) -> None:
         "psd_band_hz": [PSD_BAND_LOW_HZ, PSD_BAND_HIGH_HZ],
         "amplitude_aligned_metrics": dataset in SUPERVISED_METRIC_DATASETS,
         "distance_zscore_metrics": dataset == "seed",
+        "disable_msab": args.disable_msab,
         "metrics": metrics,
         "per_window": per_window,
     }
 
-    print_summary_table(dataset, len(val_idx), seq_len, fs, metrics, val_total_loss)
+    return report
+
+
+def evaluate_dataset(dataset: str, args: argparse.Namespace) -> None:
+    report = evaluate_dataset_report(dataset, args)
+    dataset = report["dataset"]
+    if args.output is None:
+        output_path = REPORTS_DATASET_DIRS[dataset] / f"evaluation_report_{dataset}.json"
+    else:
+        output_path = Path(args.output)
+    metrics = report["metrics"]
+    print_summary_table(
+        dataset,
+        report["n_val_windows"],
+        report["seq_len"],
+        report["sample_rate_hz"],
+        metrics,
+        report["val_total_loss"],
+    )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(f"Saved {output_path.resolve()}")
