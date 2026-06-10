@@ -54,7 +54,7 @@ from paths import (
 
 DATASETS_DEFAULT = ("clinical", "seed", "deap", "artifact_benchmark")
 DATASET_LABELS = {
-    "clinical": "Clinical (CHB-MIT / TUH)",
+    "clinical": "Clinical (CHB-MIT)",
     "seed": "SEED",
     "deap": "DEAP",
     "artifact_benchmark": "Artifact Benchmark",
@@ -311,8 +311,6 @@ def inject_citations(text: str) -> str:
         (r"\bEEGdenoiseNet\b", "EEGdenoiseNet [2]"),
         (r"\bCHB-MIT\b", "CHB-MIT [3]"),
         (r"\bCHB-MIT-derived\b", "CHB-MIT-derived [3]"),
-        (r"\bTemple University Hospital\b", "Temple University Hospital [4]"),
-        (r"\bTUH\b", "TUH [4]"),
     ]
     out = text
     for pattern, replacement in rules:
