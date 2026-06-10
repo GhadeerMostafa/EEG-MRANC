@@ -69,7 +69,7 @@ Weight transfer uses `load_model_weights_compat()` with optimizer reset between 
 
 All four `data/processed/*/mix.npy` files verified present on disk.
 
-**Note:** Clinical preprocessing uses **CHB-MIT PhysioNet chb01** EDFs. There is no TUH download pipeline; TUH is cited in the manuscript as related clinical-EEG corpus literature.
+**Note:** Clinical preprocessing uses **CHB-MIT PhysioNet chb01** EDFs only. TUH is not downloaded or evaluated; the manuscript cites TUH solely under Future Work as a prospective validation corpus.
 
 ---
 
@@ -129,7 +129,7 @@ Report: `artifacts/reports/clinical/ablation_report_clinical.json`
 
 | Topic | Manuscript / docs claim | Code reality |
 |-------|-------------------------|--------------|
-| Clinical corpus | TUH windows | CHB-MIT chb01 preprocessing only |
+| Clinical corpus | (none---TUH not used) | CHB-MIT chb01 preprocessing only |
 | Phase B stabilization | 5-epoch full unfreeze @ 1e-6 | **Disabled** in `train_attention_adapter.py` |
 | MSAB insertion | Added only at clinical phase | MSAB **always** in `MRANC.forward`; Phase 4 only re-zeroes `out_proj` and freezes backbone |
 | Automated stacking | Includes clinical UDA | Stacking ends at adapter PEFT; standalone `train.py --dataset clinical` is manual |
