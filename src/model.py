@@ -278,12 +278,18 @@ class MRANC(nn.Module):
             self.project_ecg(pred_ecg) * gain,
         )
 
-    def forward(self, mix: torch.Tensor) -> dict[str, torch.Tensor]:
+    def forward(
+        self,
+        mix: torch.Tensor,
+        *,
+        disable_msab: bool = False,
+    ) -> dict[str, torch.Tensor]:
         if mix.dim() != 3 or mix.shape[1] != SCALP_CHANNELS:
             raise ValueError(f"mix must be (B, {SCALP_CHANNELS}, T), got {tuple(mix.shape)}")
 
         features = self.encoder(mix)
-        features = self.ms_attention(features)
+        if not disable_msab:
+            features = self.ms_attention(features)
 
         pred_eog = self.eog_head(features)
         pred_emg = self.emg_head(features)
