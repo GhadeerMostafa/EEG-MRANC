@@ -168,6 +168,15 @@ We presented MRANC, a Multi-Resolution Attention-Guided Neural Cleaner that deco
 
 MRANC advances EEG preprocessing from opaque noise suppression toward accountable, stem-resolved signal explanation. We anticipate impact on methodological research (structured artifact modeling) and translational pipelines (ICU monitoring, ambulatory epilepsy care, and multi-center tele-EEG), where clinicians must see not only cleaner traces, but also what was removed, when, and why.
 
+% --- Data Availability Section ---
+\section*{Data Availability Statement}
+The complete open-source project, including model architectures, multi-stage training pipelines, evaluation scripts, and multi-language localized documentation, is publicly available in our GitHub repository (\url{https://github.com/GhadeerMostafa/EEG-MRANC}) under the Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) license. The pre-trained weights and clinical model checkpoints are proprietary assets and are not publicly hosted. To support academic validation and reproducibility, these weights will be shared on a case-by-case basis upon reasonable request for non-commercial research purposes by contacting the corresponding author.
+
+% --- References Section ---
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+% --- Appendices Section ---
 \appendices
 \section{Supplementary Multi-Channel Decompositions}\label{sec:appendix}
 The following figures supplement the main-text hero panels (Figs.~\ref{fig:clinical-fp1-w0} and~\ref{fig:clinical-cz-w0}).
@@ -355,12 +364,5 @@ The following figures supplement the main-text hero panels (Figs.~\ref{fig:clini
 \includegraphics[width=\linewidth,keepaspectratio]{../../artifacts/figures/manuscript/artifact_benchmark/artifact_benchmark_denoising_fidelity.png}
 \caption{Denoising fidelity summary for the Artifact Benchmark.}\label{fig:ab-fidelity}
 \end{figure*}
-
-\begin{thebibliography}{10}
-\bibitem{makeig1997} S.~Makeig, A.~J. Bell, T.~P. Jung, and T.~J. Sejnowski, ``Blind separation of auditory event-related brain responses into independent components,'' \emph{Proc. Natl. Acad. Sci. USA}, vol.~94, no.~20, pp.~10979--10984, 1997.
-\bibitem{zhang2022eegdenoisenet} D.~Zhang \emph{et al.}, ``EEGdenoiseNet: A benchmark for deep learning solutions of EEG denoising,'' \emph{IEEE Trans. Biomed. Eng.}, vol.~69, no.~10, pp.~3221--3233, 2022.
-\bibitem{shoeb2010chb} A.~H. Shoeb and J.~Guttag, ``Application of machine learning to epileptic seizure onset detection,'' in \emph{Proc. 27th Int. Conf. Mach. Learn. (ICML)}, 2010, pp.~975--982.
-\bibitem{shah2019tuh} I.~Shah \emph{et al.}, ``The Temple University Hospital EEG Corpus: Annotation and artifact management,'' \emph{Front. Neuroinform.}, vol.~13, p.~61, 2019.
-\end{thebibliography}
 
 \end{document}
