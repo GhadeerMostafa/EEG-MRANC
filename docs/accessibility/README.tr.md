@@ -37,6 +37,21 @@ Bu depoda kullanılan ve doğrulanan veri kaynakları:
 
 Bu depodaki klinik değerlendirme yalnızca **CHB-MIT (PhysioNet chb01)** ile sınırlıdır. **Temple University Hospital (TUH) EEG Corpus** indirilmemiş veya değerlendirilmemiştir; yalnızca gelecekteki kurumlar arası klinik doğrulama hedefi olarak belirtilmektedir.
 
+## Model Ağırlıkları ve Değerlendirme
+
+Depo, yapılandırma ve ağırlık manifestlerini `stacking_latest.json` aracılığıyla izler. Fiziksel `.pth` ikili dosyaları, belirli yayın öncesi ve lisanslama protokollerine uyum için yerel olarak tutulur.
+
+Değerlendirme betiklerini çalıştırmak için ilgili `.pth` dosyalarının `stacking_latest.json` tarafından eşlenen yollarda bulunması gerekir:
+- Phase 1: `artifacts/models/checkpoints/best_mranc_artifact_benchmark_weights_20260530_full.pth`
+- Phase 2: `artifacts/models/checkpoints/best_mranc_phase2_deap_20260530_full.pth`
+- Phase 3: `artifacts/models/checkpoints/best_mranc_phase3_seed_20260530_full.pth`
+- Phase 4: `artifacts/models/weights/mranc_final_attention_20260530_full.pth`
+- Baseline: `artifacts/models/checkpoints/baseline_eegdenoisenet_20260611_014917.pth`
+
+**Hakemler için not:** Önceden eğitilmiş model kontrol noktaları, dergi değerlendirme süreci boyunca inceleme amacıyla talep üzerine tam olarak sunulabilir.
+
+Ağırlıklar yerinde olduğunda ve işlenmiş veriler mevcut olduğunda, aşağıdaki **Betikleri Çalıştırma** bölümünde açıklandığı gibi `py scripts/evaluate_metrics.py --dataset <ad>` veya `py scripts/run_report.py --refresh` komutlarını çalıştırın.
+
 ## Kurulum Ön Koşulları
 
 - Python 3.10+ (önerilen: 3.12)

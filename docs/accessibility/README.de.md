@@ -37,6 +37,21 @@ In diesem Repository werden folgende Datenquellen verwendet und validiert:
 
 Die klinische Evaluation in diesem Repository beschränkt sich auf **CHB-MIT (PhysioNet chb01)**. Der **Temple University Hospital (TUH) EEG Corpus** wurde weder heruntergeladen noch evaluiert; er wird ausschließlich als Ziel für zukünftige institutionenübergreifende klinische Validierung genannt.
 
+## Modellgewichte und Evaluation
+
+Das Repository verwaltet Konfiguration und Gewichtsmanifeste über `stacking_latest.json`. Die physischen `.pth`-Binärdateien werden lokal vorgehalten, um spezifischen Vorveröffentlichungs- und Lizenzierungsvorgaben zu entsprechen.
+
+Zur Ausführung der Evaluierungsskripte müssen die entsprechenden `.pth`-Dateien an den in `stacking_latest.json` hinterlegten Pfaden liegen:
+- Phase 1: `artifacts/models/checkpoints/best_mranc_artifact_benchmark_weights_20260530_full.pth`
+- Phase 2: `artifacts/models/checkpoints/best_mranc_phase2_deap_20260530_full.pth`
+- Phase 3: `artifacts/models/checkpoints/best_mranc_phase3_seed_20260530_full.pth`
+- Phase 4: `artifacts/models/weights/mranc_final_attention_20260530_full.pth`
+- Baseline: `artifacts/models/checkpoints/baseline_eegdenoisenet_20260611_014917.pth`
+
+**Hinweis für Peer-Reviewer:** Vortrainierte Modell-Checkpoints stehen für Begutachtungszwecke während der Zeitschriftenevaluation auf Anfrage vollständig zur Verfügung.
+
+Sobald die Gewichte vorliegen und verarbeitete Daten vorhanden sind, führen Sie `py scripts/evaluate_metrics.py --dataset <name>` oder `py scripts/run_report.py --refresh` aus, wie im Abschnitt **Skripte ausführen** unten beschrieben.
+
 ## Installationsvoraussetzungen
 
 - Python 3.10+ (empfohlen: 3.12)

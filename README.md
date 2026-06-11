@@ -31,11 +31,26 @@ This repository ships the complete PyTorch training, evaluation, figure-generati
 | Model, training, evaluation, plotting, and report scripts | Raw EEG files (`.dat`, `.edf`, benchmark archives) |
 | `docs/` guides and `docs/manuscript/` prose and LaTeX template | Processed `.npy` tensors |
 | Empty data and output folder placeholders (`.gitkeep`) | Trained `.pth` / `.pt` weights |
-| `requirements.txt`, `LICENSE`, `checkpoints/stacking_latest.json` | `critical_figures/`, `figures/`, `outputs/reports/` |
+| `requirements.txt`, `LICENSE`, `artifacts/models/checkpoints/stacking_latest.json` | `critical_figures/`, `figures/`, `outputs/reports/` |
 | `figures/` layout for journal submission assets | Word/LaTeX build artifacts |
 
 **Comprehensive feature map (all commands):** [FEATURES.md](FEATURES.md)  
 **Full walkthrough:** [docs/getting-started.md](docs/getting-started.md)
+
+## Model Weights & Evaluation
+
+The repository tracks configuration and weight manifests via `stacking_latest.json`. The physical `.pth` binary files are kept local to comply with specific pre-publication and licensing protocols.
+
+To run evaluation scripts, the corresponding `.pth` files must reside in the paths mapped by `stacking_latest.json`:
+- Phase 1: `artifacts/models/checkpoints/best_mranc_artifact_benchmark_weights_20260530_full.pth`
+- Phase 2: `artifacts/models/checkpoints/best_mranc_phase2_deap_20260530_full.pth`
+- Phase 3: `artifacts/models/checkpoints/best_mranc_phase3_seed_20260530_full.pth`
+- Phase 4: `artifacts/models/weights/mranc_final_attention_20260530_full.pth`
+- Baseline: `artifacts/models/checkpoints/baseline_eegdenoisenet_20260611_014917.pth`
+
+**Note for Peer Reviewers:** Pre-trained model checkpoints are fully available for review purposes upon request during the journal evaluation phase.
+
+Once weights are in place and processed data exists, run `py scripts/evaluate_metrics.py --dataset <name>` or `py scripts/run_report.py --refresh` as described in **Core workflow** below.
 
 ## Quick start
 
