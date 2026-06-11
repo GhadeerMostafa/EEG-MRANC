@@ -39,6 +39,21 @@ Languages: [English](../../README.md) | [Deutsch](README.de.md) | [العربي�
 
 يقتصر التقييم السريري في هذا المستودع على **CHB-MIT (PhysioNet chb01)** فقط. لم يُحمَّل **Temple University Hospital (TUH) EEG Corpus** ولم يُقيَّم هنا؛ يُذكر حصريًا كهدف للتحقق السريري المؤسسي المستقبلي عبر المؤسسات.
 
+## أوزان النموذج والتقييم
+
+يتتبع المستودع التهيئة وقوائم أوزان النماذج عبر `stacking_latest.json`. تُحفظ ملفات `.pth` الثنائية محليًا للامتثال لبروتوكولات ما قبل النشر والترخيص المحددة.
+
+لتشغيل برامج التقييم النصية، يجب أن تقع ملفات `.pth` المقابلة في المسارات المُعرَّفة في `stacking_latest.json`:
+- Phase 1: `artifacts/models/checkpoints/best_mranc_artifact_benchmark_weights_20260530_full.pth`
+- Phase 2: `artifacts/models/checkpoints/best_mranc_phase2_deap_20260530_full.pth`
+- Phase 3: `artifacts/models/checkpoints/best_mranc_phase3_seed_20260530_full.pth`
+- Phase 4: `artifacts/models/weights/mranc_final_attention_20260530_full.pth`
+- Baseline: `artifacts/models/checkpoints/baseline_eegdenoisenet_20260611_014917.pth`
+
+**ملاحظة للمحكمين:** نقاط تفتيش النموذج المُدرَّبة مسبقًا متاحة بالكامل لأغراض المراجعة عند الطلب خلال مرحلة تقييم المجلة.
+
+بمجرد توفر الأوزان والبيانات المُعالَجة، نفّذ `py scripts/evaluate_metrics.py --dataset <اسم>` أو `py scripts/run_report.py --refresh` كما هو موضح في قسم **تشغيل البرامج النصية** أدناه.
+
 ## متطلبات التثبيت
 
 - Python 3.10+ (موصى به: 3.12)

@@ -37,6 +37,21 @@ Les sources de données utilisées et validées dans ce dépôt sont :
 
 L'évaluation clinique de ce dépôt se limite à **CHB-MIT (PhysioNet chb01)**. Le **Temple University Hospital (TUH) EEG Corpus** n'a ni été téléchargé ni évalué ici ; il est mentionné uniquement comme cible de validation clinique inter-institutionnelle future.
 
+## Poids du modèle et évaluation
+
+Le dépôt suit la configuration et les manifestes de poids via `stacking_latest.json`. Les fichiers binaires `.pth` sont conservés localement afin de respecter des protocoles spécifiques de prépublication et de licence.
+
+Pour exécuter les scripts d'évaluation, les fichiers `.pth` correspondants doivent se trouver aux chemins indiqués par `stacking_latest.json` :
+- Phase 1 : `artifacts/models/checkpoints/best_mranc_artifact_benchmark_weights_20260530_full.pth`
+- Phase 2 : `artifacts/models/checkpoints/best_mranc_phase2_deap_20260530_full.pth`
+- Phase 3 : `artifacts/models/checkpoints/best_mranc_phase3_seed_20260530_full.pth`
+- Phase 4 : `artifacts/models/weights/mranc_final_attention_20260530_full.pth`
+- Baseline : `artifacts/models/checkpoints/baseline_eegdenoisenet_20260611_014917.pth`
+
+**Note aux évaluateurs pairs :** Les points de contrôle du modèle pré-entraîné sont entièrement disponibles à des fins d'examen sur demande pendant la phase d'évaluation par la revue.
+
+Une fois les poids en place et les données traitées disponibles, exécutez `py scripts/evaluate_metrics.py --dataset <nom>` ou `py scripts/run_report.py --refresh` comme décrit dans la section **Exécution des scripts** ci-dessous.
+
 ## Prérequis d'installation
 
 - Python 3.10+ (recommandé : 3.12)
