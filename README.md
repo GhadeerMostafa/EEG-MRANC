@@ -1,3 +1,5 @@
+Languages: [English](README.md) | [Deutsch](docs/accessibility/README.de.md) | [العربية](docs/accessibility/README.ar.md) | [Türkçe](docs/accessibility/README.tr.md) | [Français](docs/accessibility/README.fr.md)
+
 <meta name="google-site-verification" content="TU1_WKv5q71kFTqop14Gav7YHIKZi_LUnN3BDedGbp4" />
 <p align="center">
   <strong>Multi-Resolution Attention-Guided Neural Cleaner (MRANC)<br>for Real-World Clinical EEG Denoising</strong>
