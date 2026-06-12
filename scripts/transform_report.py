@@ -14,6 +14,8 @@ Default output (submission manuscript; never overwrites .docx):
   docs/manuscript/MRANC_Final_Research_Report.tex
 
 Figure assets are copied to figures/{dataset}/ with relative includegraphics paths.
+Back matter order: Conclusion, Data Availability, BibTeX references, appendices.
+Uses docs/manuscript/references.bib (copied beside each .tex output).
 A build copy is also written to outputs/reports/latex/.
 
   py scripts/transform_report.py
@@ -42,6 +44,7 @@ from paths import (
     CRITICAL_FIGURES_DATASET_DIRS,
     FINAL_REPORT_PATH,
     LATEX_REPORT_DIR,
+    MANUSCRIPT_DIR,
     MANUSCRIPT_TEX_PATH,
     PROJECT_ROOT,
     SYSTEM_LATEX_ASSETS_DIR,
@@ -49,6 +52,8 @@ from paths import (
     resolve_critical_figures_dir,
     resolve_manuscript_figures_dir,
 )
+
+REFERENCES_BIB_PATH = MANUSCRIPT_DIR / "references.bib"
 
 DATASETS_DEFAULT = ("clinical", "seed", "deap", "artifact_benchmark")
 
@@ -59,8 +64,9 @@ SECTION_PATTERNS: list[tuple[re.Pattern[str], str, str]] = [
     (re.compile(r"^1\.\s*Introduction", re.I), "section", "Introduction and Related Work"),
     (re.compile(r"^2\.\s*Methodology", re.I), "section", "Methodology"),
     (re.compile(r"^3\.\s*Results", re.I), "section", "Results"),
-    (re.compile(r"^4\.\s*Discussion", re.I), "section", "Discussion"),
+    (re.compile(r"^4\.\s*Discussion", re.I), "section", "Discussion and Limitations"),
     (re.compile(r"^5\.\s*Conclusion", re.I), "section", "Conclusion"),
+    (re.compile(r"^Data Availability Statement$", re.I), "data_availability", ""),
     (re.compile(r"^references$", re.I), "references", ""),
     (
         re.compile(r"^Appendix:\s*Supplementary Multi-Channel Decompositions", re.I),
@@ -68,6 +74,17 @@ SECTION_PATTERNS: list[tuple[re.Pattern[str], str, str]] = [
         "Supplementary Multi-Channel Decompositions",
     ),
 ]
+
+SECTION_LABELS: dict[str, str] = {
+    "Introduction and Related Work": "sec:intro",
+    "Methodology": "sec:methodology",
+    "Results": "sec:results",
+    "Discussion and Limitations": "sec:discussion",
+    "Conclusion": "sec:conclusion",
+}
+
+BRACKET_CITE_PATTERN = re.compile(r"\[(\d+)\]")
+URL_PATTERN = re.compile(r"https?://[^\s)]+")
 
 SUBSECTION_PATTERN = re.compile(r"^(\d+\.\d+)\s+(.+)$")
 APPENDIX_LETTER_PATTERN = re.compile(r"^Appendix\s+([A-Z])\.\s+(.+)$", re.I)
@@ -81,7 +98,6 @@ BIBITEM_KEYS = {
     "1": "makeig1997",
     "2": "zhang2022eegdenoisenet",
     "3": "shoeb2010chb",
-    "4": "shah2019tuh",
 }
 
 DEFAULT_MANUSCRIPT_TITLE = (
@@ -191,6 +207,66 @@ def escape_latex(text: str) -> str:
     for old, new in replacements:
         out = out.replace(old, new)
     return out
+
+
+def normalize_unicode_for_latex(text: str) -> str:
+    return (
+        text.replace("\u2299", r"$\odot$")
+        .replace("\u2014", "---")
+        .replace("\u2013", "--")
+        .replace("\u201c", "``")
+        .replace("\u201d", "''")
+    )
+
+
+def prepare_latex_text(text: str) -> str:
+    """Escape body text while converting [n] cites and bare URLs for LaTeX."""
+    if not text:
+        return ""
+    text = normalize_unicode_for_latex(text)
+    cite_tokens: list[tuple[str, str]] = []
+    url_tokens: list[tuple[str, str]] = []
+
+    def stash_cite(match: re.Match[str]) -> str:
+        key = BIBITEM_KEYS.get(match.group(1), f"ref{match.group(1)}")
+        token = f"@@CITE{len(cite_tokens)}@@"
+        cite_tokens.append((token, rf"\cite{{{key}}}"))
+        return token
+
+    def stash_url(match: re.Match[str]) -> str:
+        token = f"@@URL{len(url_tokens)}@@"
+        url_tokens.append((token, match.group(0).rstrip(".,;")))
+        return token
+
+    staged = BRACKET_CITE_PATTERN.sub(stash_cite, text)
+    staged = URL_PATTERN.sub(stash_url, staged)
+    escaped = escape_latex(staged)
+    for token, cmd in cite_tokens:
+        escaped = escaped.replace(token, cmd)
+    for token, url in url_tokens:
+        escaped = escaped.replace(token, rf"\url{{{url}}}")
+    return escaped
+
+
+def emit_section(title: str) -> str:
+    label = SECTION_LABELS.get(title)
+    if label:
+        return rf"\section{{{title}}}\label{{{label}}}"
+    return rf"\section{{{title}}}"
+
+
+def emit_bibliography_block() -> str:
+    return (
+        "% --- References Section ---\n"
+        r"\bibliographystyle{IEEEtran}"
+        + "\n"
+        + r"\bibliography{references}"
+        + "\n"
+    )
+
+
+def emit_data_availability_heading() -> str:
+    return "% --- Data Availability Section ---\n" + r"\section*{Data Availability Statement}"
 
 
 def paragraph_text(paragraph: Paragraph) -> str:
@@ -308,7 +384,7 @@ def table_to_tabular(table: Table) -> str:
     lines.append(r"\begin{tabular}{" + align + "}")
     lines.append(r"\toprule")
     for row_index, row in enumerate(table.rows):
-        cells = [escape_latex(cell.text.strip()) for cell in row.cells]
+        cells = [prepare_latex_text(cell.text.strip()) for cell in row.cells]
         line = " & ".join(cells) + r" \\"
         lines.append(line)
         if row_index == 0:
@@ -458,9 +534,20 @@ def _clean_figure_caption(caption: str) -> str:
     return cap.rstrip(" .")
 
 
+HERO_FIGURE_LABELS: dict[str, str] = {
+    "clinical_eval_window0_Fp1_decomposition": "fig:clinical-fp1-w0",
+    "clinical_eval_window0_Cz_decomposition": "fig:clinical-cz-w0",
+    # Legacy filenames from older runs:
+    "tuh_eval_window0_Fp1_decomposition": "fig:clinical-fp1-w0",
+    "tuh_eval_window0_Cz_decomposition": "fig:clinical-cz-w0",
+}
+
+
 def _figure_label_from_path(image_path: str) -> str:
-    stem = Path(image_path).stem.replace("-", "_")
-    return f"fig:{stem}"
+    stem = Path(image_path).stem
+    if stem in HERO_FIGURE_LABELS:
+        return HERO_FIGURE_LABELS[stem]
+    return f"fig:{stem.replace('-', '_')}"
 
 
 def emit_figure_star(image_path: str, caption: str) -> str:
@@ -503,6 +590,7 @@ def sanitize_bibliography_text(text: str) -> str:
 
 
 def references_to_bibliography(lines: list[str]) -> str:
+    """Legacy inline bibliography (unused when references.bib is present)."""
     items: list[str] = []
     for line in lines:
         parsed = parse_reference_line(line)
@@ -570,6 +658,8 @@ def transform_document(
 
     in_abstract = False
     in_references = False
+    in_data_availability = False
+    bibliography_emitted = False
     appendix_mode = False
     title_emitted = False
     image_counter = [0]
@@ -584,12 +674,22 @@ def transform_document(
             body_lines.append("")
             in_abstract = False
 
-    def flush_references() -> None:
-        nonlocal in_references
-        if in_references and references_buffer:
-            body_lines.append(references_to_bibliography(references_buffer))
-            references_buffer.clear()
+    def emit_bibliography_once() -> None:
+        nonlocal bibliography_emitted, in_references
+        if bibliography_emitted:
             in_references = False
+            references_buffer.clear()
+            return
+        if REFERENCES_BIB_PATH.is_file():
+            body_lines.append(emit_bibliography_block())
+        elif references_buffer:
+            body_lines.append(references_to_bibliography(references_buffer))
+        bibliography_emitted = True
+        references_buffer.clear()
+        in_references = False
+
+    def flush_references() -> None:
+        emit_bibliography_once()
 
     for block in blocks:
         if isinstance(block, Table):
@@ -621,40 +721,53 @@ def transform_document(
             kind, title = heading
             if kind == "abstract":
                 close_abstract()
-                flush_references()
                 in_abstract = True
                 body_lines.append(r"\begin{abstract}")
                 continue
+            if kind == "data_availability":
+                close_abstract()
+                in_data_availability = True
+                body_lines.append(emit_data_availability_heading())
+                body_lines.append("")
+                continue
             if kind == "references":
                 close_abstract()
-                flush_references()
+                in_data_availability = False
+                emit_bibliography_once()
                 in_references = True
                 continue
             if kind == "appendix_start":
                 close_abstract()
+                in_data_availability = False
                 flush_references()
                 appendix_mode = True
+                body_lines.append("% --- Appendices Section ---")
                 body_lines.append(r"\appendices")
                 body_lines.append(
                     r"\section{" + title + r"}\label{sec:appendix}"
                 )
                 body_lines.append(
-                    "The following figures supplement the main-text hero panels."
+                    "The following figures supplement the main-text hero panels "
+                    r"(Figs.~\ref{fig:clinical-fp1-w0} and~\ref{fig:clinical-cz-w0})."
                 )
                 body_lines.append("")
                 continue
             if kind == "section":
                 close_abstract()
-                flush_references()
+                in_data_availability = False
                 section_title = title if title else escape_latex(text)
-                body_lines.append(r"\section{" + section_title + "}")
+                body_lines.append(emit_section(section_title))
                 continue
             if kind == "subsection":
                 close_abstract()
+                in_data_availability = False
                 body_lines.append(r"\subsection{" + title + "}")
                 continue
             if kind == "appendix_subsection":
-                body_lines.append(r"\subsection{" + title + "}")
+                appendix_title = title
+                if ". " in appendix_title:
+                    appendix_title = appendix_title.split(". ", 1)[1]
+                body_lines.append(r"\subsection{" + appendix_title + "}")
                 stats["appendix_subsections"] += 1
                 continue
             if kind == "table_heading":
@@ -663,6 +776,11 @@ def transform_document(
 
         if in_references:
             references_buffer.append(text)
+            continue
+
+        if in_data_availability:
+            body_lines.append(prepare_latex_text(text))
+            body_lines.append("")
             continue
 
         cap_match = FIGURE_CAPTION_PATTERN.match(text)
@@ -687,7 +805,7 @@ def transform_document(
             continue
 
         if in_abstract:
-            body_lines.append(escape_latex(text))
+            body_lines.append(prepare_latex_text(text))
             body_lines.append("")
             continue
 
@@ -698,12 +816,12 @@ def transform_document(
         if should_skip_body_paragraph(text):
             continue
 
-        body_lines.append(escape_latex(text))
+        body_lines.append(prepare_latex_text(text))
         body_lines.append("")
 
     close_abstract()
-    if in_references and references_buffer:
-        body_lines.append(references_to_bibliography(references_buffer))
+    if in_references or references_buffer:
+        emit_bibliography_once()
 
     if pending_figure_image is not None:
         rel_path = resolve_figure_path(pending_figure_image, "", tex_dir)
@@ -777,6 +895,11 @@ def main() -> int:
         SYSTEM_REPORT_TEX_PATH.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(output_path, SYSTEM_REPORT_TEX_PATH)
         print(f"  Build copy: {SYSTEM_REPORT_TEX_PATH.resolve()}")
+
+    for tex_target in {output_path.resolve(), SYSTEM_REPORT_TEX_PATH.resolve()}:
+        bib_target = tex_target.parent / "references.bib"
+        if REFERENCES_BIB_PATH.is_file() and bib_target != REFERENCES_BIB_PATH.resolve():
+            shutil.copy2(REFERENCES_BIB_PATH, bib_target)
 
     return 0
 

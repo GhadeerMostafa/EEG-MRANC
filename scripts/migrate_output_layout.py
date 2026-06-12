@@ -52,8 +52,9 @@ def migrate_critical_figures_root(apply: bool, log: list[str]) -> None:
     clinical_dir = CRITICAL_FIGURES_DIR / "clinical"
     clinical_dir.mkdir(parents=True, exist_ok=True)
 
-    for png in CRITICAL_FIGURES_DIR.glob("tuh_*.png"):
-        safe_move(png, clinical_dir / png.name, apply, log)
+    for pattern in ("tuh_*.png", "clinical_*.png"):
+        for png in CRITICAL_FIGURES_DIR.glob(pattern):
+            safe_move(png, clinical_dir / png.name, apply, log)
 
     root_manifest = CRITICAL_FIGURES_DIR / "decomposition_manifest.json"
     if root_manifest.is_file():

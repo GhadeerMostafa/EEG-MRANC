@@ -323,19 +323,22 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     all_windows: List[np.ndarray] = []
+    all_groups: List[np.ndarray] = []
     total = 0
-    for path in edf_files:
+    for session_idx, path in enumerate(edf_files):
         windows = process_edf_file(path, target_sfreq=args.sfreq, window_size=args.window_size)
         if windows.size == 0:
             print(f"  Warning: {path} produced 0 windows (too short for window_size={args.window_size}).")
             continue
         all_windows.append(windows)
+        all_groups.append(np.full(windows.shape[0], session_idx, dtype=np.int32))
         total += windows.shape[0]
 
     if not all_windows:
         raise RuntimeError("No windows produced from any EDF file; aborting.")
 
     mix = np.concatenate(all_windows, axis=0).astype(np.float32, copy=False)
+    window_groups = np.concatenate(all_groups, axis=0)
     if np.isnan(mix).any():
         raise RuntimeError("NaNs detected in processed clinical mix array.")
 
@@ -344,8 +347,11 @@ def main() -> None:
         raise RuntimeError(f"Expected 32 channels, got {mix.shape[1]}")
 
     out_path = output_dir / "mix.npy"
+    groups_path = output_dir / "window_groups.npy"
     np.save(out_path, mix)
+    np.save(groups_path, window_groups)
     print(f"Saved {out_path}")
+    print(f"Saved {groups_path} (unique_sessions={len(np.unique(window_groups))})")
 
 
 if __name__ == "__main__":

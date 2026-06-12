@@ -12,7 +12,7 @@ from runtime import setup_src_path
 
 setup_src_path()
 
-from paths import PROCESSED_DEAP
+from paths import DATASET_DIRS
 
 
 def read_npy_header(path: Path) -> tuple[tuple[int, ...], str]:
@@ -36,8 +36,7 @@ def read_npy_header(path: Path) -> tuple[tuple[int, ...], str]:
     return shape, dtype
 
 
-def main() -> None:
-    root = PROCESSED_DEAP
+def validate_dataset_dir(root: Path, require_groups: bool = True) -> None:
     expected_channels = {
         "mix.npy": 32,
         "ref_eog.npy": 2,
@@ -46,10 +45,22 @@ def main() -> None:
     }
 
     shapes: dict[str, tuple[int, ...]] = {}
+    mix_path = root / "mix.npy"
+    if not mix_path.exists():
+        raise FileNotFoundError(f"Missing {mix_path}")
+
+    mix_shape, mix_dtype = read_npy_header(mix_path)
+    if mix_dtype != "float32" or len(mix_shape) != 3 or mix_shape[1] != 32:
+        raise ValueError(f"mix.npy: expected (N, 32, T) float32, got {mix_shape} {mix_dtype}")
+    shapes["mix.npy"] = mix_shape
+    print(f"  mix.npy: shape={mix_shape}, dtype=float32")
+
     for name, exp_c in expected_channels.items():
+        if name == "mix.npy":
+            continue
         path = root / name
         if not path.exists():
-            raise FileNotFoundError(f"Missing {path}")
+            continue
         shape, dtype = read_npy_header(path)
         shapes[name] = shape
         if dtype != "float32":
@@ -63,9 +74,31 @@ def main() -> None:
         if shape[0] != n0 or shape[2] != t0:
             raise ValueError(f"{name}: N/T mismatch vs mix ({n0}, *, {t0}) vs {shape}")
 
+    groups_path = root / "window_groups.npy"
+    if require_groups:
+        if not groups_path.exists():
+            raise FileNotFoundError(
+                f"Missing {groups_path}. Re-run preprocessing to generate subject/session groups."
+            )
+        group_shape, _group_dtype = read_npy_header(groups_path)
+        if len(group_shape) != 1 or group_shape[0] != n0:
+            raise ValueError(
+                f"window_groups.npy: expected ({n0},), got {group_shape}"
+            )
+        print(f"  window_groups.npy: shape=({n0},) unique_groups=see audit script")
+
     print(f"OK: {n0} windows, T={t0}, ready for MRANC training.")
 
 
+def main() -> None:
+    print("Validating processed datasets...")
+    for name, root in DATASET_DIRS.items():
+        if not root.exists():
+            print(f"SKIP {name}: missing {root}")
+            continue
+        print(f"\n{name} ({root}):")
+        validate_dataset_dir(root, require_groups=True)
+
+
 if __name__ == "__main__":
-    print("Validating processed_data...")
     main()

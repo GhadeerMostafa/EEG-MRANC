@@ -131,7 +131,7 @@ py scripts/generate_interpretability_plots.py [options]
 | `--cmap` | `viridis` | Attention heatmap colormap (`viridis` or `plasma`) |
 | `--device` | `auto` | `auto`, `cuda`, `cpu` |
 
-Outputs per dataset (`prefix` is `tuh` for clinical):
+Outputs per dataset (`prefix` is `clinical` for CHB-MIT):
 - `critical_figures/{dataset}/{prefix}_denoising_fidelity.png`
 - `critical_figures/{dataset}/{prefix}_attention_map_heatmap.png`
 
@@ -173,7 +173,7 @@ Each output file uses an ultra-wide 6-row layout (`figsize=(16, 12)`, shared x-a
 
 Output pattern:
 `critical_figures/{dataset}/{prefix}_eval_window{G}_{Channel}_decomposition.png`
-where `prefix` is `tuh` for clinical and the dataset name otherwise.
+where `prefix` is `clinical` for CHB-MIT and the dataset name otherwise.
 
 | Flag | Description |
 |------|-------------|
@@ -276,7 +276,7 @@ py scripts/run_report.py [options]
 
 Requires `python-docx` and `scikit-learn` for full baseline pipeline. The report includes:
 
-- Introduction and Methodology with IEEE citation brackets [1]-[4]
+- Introduction and Methodology with IEEE citation brackets [1]-[3]
 - Results: Table I (clinical SOTA comparison), Table II (MRANC cross-dataset summary), dynamic narrative
 - Main text: two hero clinical decomposition figures (Fp1, Cz) only
 - Appendix: Supplementary Multi-Channel Decompositions with all remaining PNGs at 6.0-inch width
@@ -315,7 +315,7 @@ pip install python-docx
 
 ```bash
 py scripts/run_report.py --full-refresh
-py scripts/transform_report.py
+py scripts/transform_report.py   # emits docs/manuscript/MRANC_Final_Research_Report.tex + references.bib
 ```
 
 **Metrics and figures only (no retraining):**
@@ -367,5 +367,5 @@ py scripts/migrate_output_layout.py          # dry-run
 py scripts/migrate_output_layout.py --apply  # move misplaced files
 ```
 
-Moves flat `critical_figures/tuh_*.png` into `critical_figures/clinical/`, relocates
+Moves flat `critical_figures/clinical_*.png` (and legacy `tuh_*.png`) into `critical_figures/clinical/`, relocates
 misplaced evaluation JSON, and archives legacy flat reports under `outputs/reports/_archive/`.

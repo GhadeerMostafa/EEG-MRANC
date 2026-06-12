@@ -16,9 +16,10 @@ from pathlib import Path
 import numpy as np
 import torch
 from runtime import setup_src_path
-from torch.utils.data import TensorDataset, random_split
 
 setup_src_path()
+
+from group_splits import audit_split_leakage, train_val_indices_for_dir
 
 from metric_alignment import (
     ARTIFACT_KEYS,
@@ -275,18 +276,6 @@ def dataset_length(data_dir: Path) -> int:
     return int(np.load(mix_path, mmap_mode="r").shape[0])
 
 
-def val_indices(n_total: int, val_fraction: float, split_seed: int) -> list[int]:
-    n_val = max(1, int(n_total * val_fraction))
-    n_train = n_total - n_val
-    placeholder = TensorDataset(torch.zeros(n_total))
-    _, val_ds = random_split(
-        placeholder,
-        [n_train, n_val],
-        generator=torch.Generator().manual_seed(split_seed),
-    )
-    return list(val_ds.indices)
-
-
 def _metric_scalar(value: torch.Tensor | float) -> float | None:
     v = float(value) if not isinstance(value, torch.Tensor) else float(value.detach().cpu().item())
     return v if math.isfinite(v) else None
@@ -351,7 +340,16 @@ def evaluate_dataset_report(dataset: str, args: argparse.Namespace) -> dict:
     fs = resolve_sample_rate(dataset, args.sample_rate)
     noise_mult = float(config.get("noise_coeff_end", 0.01))
 
-    val_idx = val_indices(n_total, val_fraction, split_seed)
+    train_idx, val_idx_arr, group_ids, policy = train_val_indices_for_dir(
+        data_dir,
+        val_fraction=val_fraction,
+        split_seed=split_seed,
+        dataset=dataset,
+    )
+    audit_split_leakage(
+        group_ids, train_idx, val_idx_arr, split_policy=policy, label=dataset
+    )
+    val_idx = val_idx_arr.tolist()
     per_window: list[dict] = []
     total_loss_sum = 0.0
     total_loss_count = 0

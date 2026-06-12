@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn.functional as F
-from torch.utils.data import TensorDataset, random_split
 
+from group_splits import audit_split_leakage, val_indices as group_val_indices
 from clinical_sanitize import sanitize_clinical_batch
 from model import MRANC, SCALP_CHANNELS
 from paths import MAIN_CHECKPOINT, PROJECT_ROOT, resolve_processed_dir
@@ -87,16 +87,21 @@ def safe_channel_slug(name: str) -> str:
     return slug or "ch"
 
 
-def val_indices(n_total: int, val_fraction: float, split_seed: int) -> list[int]:
-    n_val = max(1, int(n_total * val_fraction))
-    n_train = n_total - n_val
-    placeholder = TensorDataset(torch.zeros(n_total))
-    _, val_ds = random_split(
-        placeholder,
-        [n_train, n_val],
-        generator=torch.Generator().manual_seed(split_seed),
+def val_indices(
+    n_total: int,
+    val_fraction: float,
+    split_seed: int,
+    *,
+    data_dir: Path | None = None,
+    dataset: str | None = None,
+) -> list[int]:
+    return group_val_indices(
+        n_total,
+        val_fraction=val_fraction,
+        split_seed=split_seed,
+        data_dir=data_dir,
+        dataset=dataset,
     )
-    return list(val_ds.indices)
 
 
 def parse_window_indices(spec: str, n_val: int) -> list[int]:
@@ -242,8 +247,13 @@ def dataset_display_name(dataset: str) -> str:
 
 
 def output_file_prefix(dataset: str) -> str:
-    """Filesystem prefix for figure outputs (clinical real-world runs use tuh)."""
-    return "tuh" if dataset == "clinical" else dataset
+    """Filesystem prefix for figure outputs (clinical = CHB-MIT chb01, not TUH)."""
+    return "clinical" if dataset == "clinical" else dataset
+
+
+def clinical_figure_prefixes() -> tuple[str, ...]:
+    """Accepted filename prefixes for CHB-MIT clinical figures (legacy tuh_ included)."""
+    return ("clinical", "tuh")
 
 
 def setup_publication_style(dpi: int = DEFAULT_DPI) -> None:

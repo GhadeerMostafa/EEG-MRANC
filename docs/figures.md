@@ -25,7 +25,7 @@ See [getting-started.md](getting-started.md) for the ordered workflow: train →
 | `run_report.py` | Word research report | `outputs/reports/clinical/MRANC_Final_Research_Report.docx` |
 | `transform_report.py` | Word to IEEEtran LaTeX | `outputs/reports/latex/MRANC_Final_Research_Report.tex` |
 
-`prefix` is `tuh` for clinical, otherwise the dataset name.
+`prefix` is `clinical` for CHB-MIT clinical runs, otherwise the dataset name.
 
 ## Output paths (no overlap)
 
@@ -43,14 +43,14 @@ See [getting-started.md](getting-started.md) for the ordered workflow: train →
 |---------|---------|
 | Title | MRANC multi-dataset denoising (centered, 16pt) |
 | Abstract | `docs/manuscript/abstract.txt` |
-| 1. Introduction and Related Works | `introduction.txt` + IEEE citations [1]-[4] |
+| 1. Introduction and Related Works | `introduction.txt` + IEEE citations [1]-[3] |
 | 2. Methodology | `methodology.txt` + citations |
 | 3. Results | Table I (clinical SOTA), Table II (MRANC all datasets), dynamic narrative |
 | 3.1 Hero figures | Clinical Fp1 and Cz decomposition only (validation window 0) |
 | 4. Discussion | `discussion.txt` |
 | 5. Conclusion | `conclusion.txt` |
 | Appendix: Supplementary Multi-Channel Decompositions | All other PNGs (O1, summaries, seed/deap/benchmark) |
-| References | IEEE bibliography [1]-[4] |
+| References | IEEE bibliography [1]-[3] |
 
 **Table I** columns: Evaluation Metric, Raw Baseline, Traditional ICA [1], EEGdenoiseNet [2], MRANC (Ours).
 MRANC cells load from evaluation JSON; ICA/EEGdenoiseNet/raw load from baseline JSON manifests.

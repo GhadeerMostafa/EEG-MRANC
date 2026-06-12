@@ -36,7 +36,7 @@ from baseline_eval import (
     extract_raw_metric_means,
     load_baseline_json,
 )
-from figure_common import output_file_prefix
+from figure_common import clinical_figure_prefixes, output_file_prefix
 from checkpoint_paths import resolve_stacking_latest
 from paths import (
     ARTIFACT_BENCHMARK_CHECKPOINT,
@@ -108,11 +108,6 @@ REFERENCES = [
         "[3] A. H. Shoeb and J. Guttag, "
         "'Application of machine learning to epileptic seizure onset detection,' "
         "in Proc. 27th Int. Conf. Mach. Learn. (ICML), 2010, pp. 975-982."
-    ),
-    (
-        "[4] I. Shah et al., "
-        "'The Temple University Hospital EEG Corpus: Annotation and artifact management,' "
-        "Front. Neuroinform., vol. 13, p. 61, 2019."
     ),
 ]
 
@@ -291,15 +286,53 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+MANUSCRIPT_SUBSECTION_MARKER = re.compile(r"^\[subsection\]\s*(.+)$", re.I)
+
+
 def load_text_file(path: Path) -> str:
     if not path.is_file():
         return ""
-    text = path.read_text(encoding="utf-8").strip()
+    raw_lines = path.read_text(encoding="utf-8").splitlines()
+    lines = [line for line in raw_lines if not line.strip().startswith("#")]
+    text = "\n".join(lines).strip()
     for header in ("ABSTRACT", "METHODOLOGY", "INTRODUCTION", "DISCUSSION", "CONCLUSION"):
         if text.upper().startswith(header):
             text = text.split("\n", 1)[-1].strip()
             break
     return text
+
+
+def add_paragraph_block(document: Document, text: str) -> None:
+    block = text.strip()
+    if not block:
+        return
+    para = document.add_paragraph(block)
+    para.style = document.styles["Normal"]
+    for run in para.runs:
+        run.font.name = "Times New Roman"
+        run.font.size = Pt(12)
+
+
+def add_marked_manuscript_body(document: Document, text: str, section_number: int) -> None:
+    """Emit [subsection] markers as numbered Heading 2 for LaTeX transform."""
+    subsection_idx = 0
+    for block in text.split("\n\n"):
+        block = block.strip()
+        if not block:
+            continue
+        first_line, _, remainder = block.partition("\n")
+        match = MANUSCRIPT_SUBSECTION_MARKER.match(first_line.strip())
+        if match:
+            subsection_idx += 1
+            add_heading(
+                document,
+                f"{section_number}.{subsection_idx} {match.group(1).strip()}",
+                level=2,
+            )
+            if remainder.strip():
+                add_paragraph_block(document, remainder.strip())
+            continue
+        add_paragraph_block(document, block)
 
 
 def inject_citations(text: str) -> str:
@@ -572,9 +605,11 @@ def build_results_narrative(
     hero_window: int,
 ) -> str:
     parts: list[str] = [
-        "Section 3 reports quantitative denoising performance on held-out clinical validation "
-        "windows. Table I contrasts raw mixture, empirical ICA and EEGdenoiseNet baselines "
-        "against live MRANC metrics loaded from evaluation JSON at build time. "
+        "Section 3 reports quantitative denoising performance on held-out validation windows "
+        "under a subject-independent split protocol (group-wise holdout for DEAP subjects, "
+        "SEED simulations, and clinical EDF sessions; contiguous temporal holdout for the "
+        "artifact benchmark). Table I contrasts raw mixture, empirical ICA and EEGdenoiseNet "
+        "baselines against live MRANC metrics loaded from evaluation JSON at build time. "
         "Table II summarizes MRANC across all evaluated corpora.",
     ]
 
@@ -678,15 +713,19 @@ def load_decomposition_manifests(
 
 def classify_figure(path: Path, dataset: str) -> FigureRecord:
     name = path.name
-    prefix = output_file_prefix(dataset)
+    prefixes = clinical_figure_prefixes() if dataset == "clinical" else (output_file_prefix(dataset),)
     if name.endswith("_denoising_fidelity.png"):
         return FigureRecord(path, dataset, "denoising_fidelity", None, None)
     if name.endswith("_attention_map_heatmap.png"):
         return FigureRecord(path, dataset, "attention_heatmap", None, None)
-    match = re.match(
-        rf"{re.escape(prefix)}_eval_window(\d+)_(\w+)_decomposition\.png",
-        name,
-    )
+    match = None
+    for prefix in prefixes:
+        match = re.match(
+            rf"{re.escape(prefix)}_eval_window(\d+)_(\w+)_decomposition\.png",
+            name,
+        )
+        if match:
+            break
     if match:
         return FigureRecord(
             path,
@@ -1025,11 +1064,20 @@ def build_report(
         "channels, and interpretability summary panels are in the Appendix.",
     )
 
-    add_heading(document, "4. Discussion", level=1)
-    add_body(document, load_text_file(MANUSCRIPT_DIR / "discussion.txt"))
+    add_heading(document, "4. Discussion and Limitations", level=1)
+    add_marked_manuscript_body(
+        document,
+        load_text_file(MANUSCRIPT_DIR / "discussion.txt"),
+        section_number=4,
+    )
 
     add_heading(document, "5. Conclusion", level=1)
     add_body(document, load_text_file(MANUSCRIPT_DIR / "conclusion.txt"))
+
+    add_heading(document, "Data Availability Statement", level=1)
+    add_body(document, load_text_file(MANUSCRIPT_DIR / "data_availability.txt"))
+
+    add_references_section(document)
 
     add_heading(document, "Appendix: Supplementary Multi-Channel Decompositions", level=1)
     add_body(
@@ -1058,8 +1106,6 @@ def build_report(
         "Full pipeline: py scripts/run_report.py --full-refresh. "
         "Metrics/figures only: py scripts/run_report.py --refresh",
     )
-
-    add_references_section(document)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     document.save(str(output_path))
