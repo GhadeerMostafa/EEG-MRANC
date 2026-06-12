@@ -10,9 +10,8 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import torch
-from torch.utils.data import TensorDataset, random_split
 
+from group_splits import train_val_indices_for_dir, val_indices as group_val_indices
 from paths import (
     BASELINE_DATASETS,
     DATASET_DIRS,
@@ -82,25 +81,42 @@ def val_indices(
     n_total: int,
     val_fraction: float = DEFAULT_VAL_FRACTION,
     split_seed: int = DEFAULT_SPLIT_SEED,
+    *,
+    data_dir: str | Path | None = None,
+    dataset: str | None = None,
 ) -> list[int]:
-    n_val = max(1, int(n_total * val_fraction))
-    n_train = n_total - n_val
-    placeholder = TensorDataset(torch.zeros(n_total))
-    _, val_ds = random_split(
-        placeholder,
-        [n_train, n_val],
-        generator=torch.Generator().manual_seed(split_seed),
+    del n_total  # length inferred from data_dir mix.npy
+    return group_val_indices(
+        0,
+        val_fraction=val_fraction,
+        split_seed=split_seed,
+        data_dir=data_dir,
+        dataset=dataset,
     )
-    return list(val_ds.indices)
 
 
 def train_indices(
     n_total: int,
     val_fraction: float = DEFAULT_VAL_FRACTION,
     split_seed: int = DEFAULT_SPLIT_SEED,
+    *,
+    data_dir: str | Path | None = None,
+    dataset: str | None = None,
 ) -> list[int]:
-    val_set = set(val_indices(n_total, val_fraction, split_seed))
-    return [i for i in range(n_total) if i not in val_set]
+    if data_dir is None:
+        if dataset is None or dataset not in DATASET_DIRS:
+            raise ValueError(
+                "train_indices requires data_dir or a known dataset name "
+                f"(got dataset={dataset!r})"
+            )
+        data_dir = DATASET_DIRS[dataset]
+    train_idx, _, _, _ = train_val_indices_for_dir(
+        data_dir,
+        val_fraction=val_fraction,
+        split_seed=split_seed,
+        dataset=dataset,
+    )
+    return train_idx.tolist()
 
 
 def resolve_data_dir(dataset: str, data_dir: str | None = None) -> Path:

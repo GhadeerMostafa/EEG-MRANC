@@ -204,7 +204,9 @@ def run_dataset_pipeline(
         return 0
 
     n_total = int(np.load(mix_path, mmap_mode="r").shape[0])
-    val_global = val_indices(n_total, args.val_fraction, args.split_seed)
+    val_global = val_indices(
+        n_total, args.val_fraction, args.split_seed, data_dir=data_dir, dataset=dataset
+    )
     val_slots = parse_window_indices(args.window_indices, len(val_global))
     if args.max_windows > 0:
         val_slots = val_slots[: args.max_windows]

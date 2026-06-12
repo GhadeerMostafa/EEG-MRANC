@@ -17,7 +17,6 @@ import numpy as np
 import torch
 from runtime import setup_src_path
 from scipy.signal import detrend
-from torch.utils.data import TensorDataset, random_split
 
 setup_src_path()
 
@@ -200,33 +199,24 @@ def dataset_length(data_dir: Path) -> int:
     return int(np.load(mix_path, mmap_mode="r").shape[0])
 
 
-def val_indices(
-    n_total: int,
-    val_fraction: float,
-    split_seed: int,
-) -> list[int]:
-    n_val = max(1, int(n_total * val_fraction))
-    n_train = n_total - n_val
-    placeholder = TensorDataset(torch.zeros(n_total))
-    _, val_ds = random_split(
-        placeholder,
-        [n_train, n_val],
-        generator=torch.Generator().manual_seed(split_seed),
-    )
-    return list(val_ds.indices)
-
-
 def select_window(
     data_dir: Path,
     window_index: int,
     use_val_split: bool,
     val_fraction: float,
     split_seed: int,
+    dataset: str | None = None,
 ) -> tuple[int, int | None, np.ndarray]:
     """Return (global_index, val_index_or_None, mix_32xT)."""
     n_total = dataset_length(data_dir)
     if use_val_split:
-        val_idx = val_indices(n_total, val_fraction, split_seed)
+        val_idx = val_indices(
+            n_total,
+            val_fraction,
+            split_seed,
+            data_dir=data_dir,
+            dataset=dataset,
+        )
         if window_index < 0 or window_index >= len(val_idx):
             raise ValueError(
                 f"--window-index {window_index} out of val range [0, {len(val_idx)})"
@@ -1022,6 +1012,7 @@ def main() -> None:
         use_val_split,
         val_fraction,
         split_seed,
+        dataset=args.dataset,
     )
     val_slot = val_pos if val_pos is not None else global_idx
 

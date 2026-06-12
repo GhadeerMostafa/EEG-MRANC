@@ -323,11 +323,12 @@ def convert_all(
     heog: dict[int, np.ndarray],
     window_samples: int,
     k_neighbors: int,
-) -> tuple[list[np.ndarray], list[np.ndarray], list[np.ndarray], list[np.ndarray], dict, SpatialMapper19to32]:
+) -> tuple[list[np.ndarray], list[np.ndarray], list[np.ndarray], list[np.ndarray], list[np.ndarray], dict, SpatialMapper19to32]:
     mix_windows: list[np.ndarray] = []
     eog_windows: list[np.ndarray] = []
     emg_windows: list[np.ndarray] = []
     ecg_windows: list[np.ndarray] = []
+    group_windows: list[np.ndarray] = []
     stats: dict = {"per_sim": {}, "total_windows": 0}
 
     mapper = SpatialMapper19to32(k_neighbors=k_neighbors)
@@ -362,6 +363,7 @@ def convert_all(
             )
             emg_windows.append(np.zeros((EMG_REF_CHANNELS, window_samples), dtype=np.float32))
             ecg_windows.append(np.zeros((ECG_REF_CHANNELS, window_samples), dtype=np.float32))
+            group_windows.append(np.int32(sim_id))
 
         logger.info("sim%d: T=%d -> %d windows (dropped %d)", sim_id, min_t, n_win, dropped)
 
@@ -369,7 +371,7 @@ def convert_all(
     if not mix_windows:
         raise ValueError("No windows produced")
 
-    return mix_windows, eog_windows, emg_windows, ecg_windows, stats, mapper
+    return mix_windows, eog_windows, emg_windows, ecg_windows, group_windows, stats, mapper
 
 
 def save_outputs(
@@ -378,6 +380,7 @@ def save_outputs(
     ref_eog: np.ndarray,
     ref_emg: np.ndarray,
     ref_ecg: np.ndarray,
+    window_groups: np.ndarray,
     meta: dict,
     channel_map: dict,
 ) -> None:
@@ -386,6 +389,7 @@ def save_outputs(
     np.save(out_dir / "ref_eog.npy", ref_eog)
     np.save(out_dir / "ref_emg.npy", ref_emg)
     np.save(out_dir / "ref_ecg.npy", ref_ecg)
+    np.save(out_dir / "window_groups.npy", window_groups)
     (out_dir / "conversion_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
     (out_dir / "channel_map.json").write_text(json.dumps(channel_map, indent=2), encoding="utf-8")
     logger.info("Saved %s/mix.npy shape=%s", out_dir, mix.shape)
@@ -409,7 +413,7 @@ def main() -> None:
     veog = eog_by_sim(load_mat_dict(veog_path), VEOG_PATTERN)
     heog = eog_by_sim(load_mat_dict(heog_path), HEOG_PATTERN)
 
-    mix_list, eog_list, emg_list, ecg_list, sim_stats, mapper = convert_all(
+    mix_list, eog_list, emg_list, ecg_list, group_list, sim_stats, mapper = convert_all(
         contaminated,
         veog,
         heog,
@@ -427,6 +431,7 @@ def main() -> None:
     ref_eog = np.stack(eog_list, axis=0)
     ref_emg = np.stack(emg_list, axis=0)
     ref_ecg = np.stack(ecg_list, axis=0)
+    window_groups = np.asarray(group_list, dtype=np.int32)
 
     mapper_info = mapper.summary()
     logger.info("Spatial fill methods: %s", mapper_info["fill_method_counts"])
@@ -450,7 +455,7 @@ def main() -> None:
         "spatial_fill_method_counts": mapper_info["fill_method_counts"],
     }
 
-    save_outputs(out_dir, mix, ref_eog, ref_emg, ref_ecg, meta, mapper_info)
+    save_outputs(out_dir, mix, ref_eog, ref_emg, ref_ecg, window_groups, meta, mapper_info)
 
     ch0 = mix[0, 0]
     ch1 = mix[0, 1]

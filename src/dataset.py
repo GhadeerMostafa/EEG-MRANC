@@ -13,7 +13,9 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, Dataset, random_split
+from torch.utils.data import DataLoader, Dataset, Subset
+
+from group_splits import audit_split_leakage, train_val_indices_for_dir
 
 logger = logging.getLogger(__name__)
 
@@ -165,18 +167,27 @@ def build_train_val_dataloaders(
     num_workers: int = 0,
     storage: str = "cuda",
     chunk_windows: int = 2048,
+    dataset: str | None = None,
 ) -> tuple[DataLoader, DataLoader, MRANCDataset]:
     if not 0.0 < val_fraction < 1.0:
         raise ValueError(f"val_fraction must be in (0, 1), got {val_fraction}")
 
     full = MRANCDataset(data_dir=data_dir, storage=storage, chunk_windows=chunk_windows)
-    n_val = max(1, int(len(full) * val_fraction))
-    n_train = len(full) - n_val
-    train_ds, val_ds = random_split(
-        full,
-        [n_train, n_val],
-        generator=torch.Generator().manual_seed(seed),
+    train_idx, val_idx, group_ids, policy = train_val_indices_for_dir(
+        data_dir,
+        val_fraction=val_fraction,
+        split_seed=seed,
+        dataset=dataset,
     )
+    audit_split_leakage(
+        group_ids,
+        train_idx,
+        val_idx,
+        split_policy=policy,
+        label=str(data_dir),
+    )
+    train_ds = Subset(full, train_idx.tolist())
+    val_ds = Subset(full, val_idx.tolist())
 
     pin = storage != "cuda"
     train_loader = build_dataloader(

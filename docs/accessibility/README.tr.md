@@ -35,7 +35,7 @@ Bu depoda kullanılan ve doğrulanan veri kaynakları:
 
 ## Sınırlamalar ve Gelecek Çalışmalar
 
-Bu depodaki klinik değerlendirme yalnızca **CHB-MIT (PhysioNet chb01)** ile sınırlıdır. **Temple University Hospital (TUH) EEG Corpus** indirilmemiş veya değerlendirilmemiştir; yalnızca gelecekteki kurumlar arası klinik doğrulama hedefi olarak belirtilmektedir.
+Bu depodaki klinik değerlendirme yalnızca **CHB-MIT (PhysioNet chb01)** ile sınırlıdır.
 
 ## Model Ağırlıkları ve Değerlendirme
 

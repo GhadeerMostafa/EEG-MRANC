@@ -312,7 +312,9 @@ def run_dataset(
         return 0
 
     n_total = int(np.load(mix_path, mmap_mode="r").shape[0])
-    val_global = val_indices(n_total, args.val_fraction, args.split_seed)
+    val_global = val_indices(
+        n_total, args.val_fraction, args.split_seed, data_dir=data_dir, dataset=dataset
+    )
     val_slots = resolve_window_indices_arg(args, len(val_global))
 
     channel_names = load_deap_channel_names(data_dir)

@@ -234,7 +234,13 @@ def evaluate_dataset(
 
     data_dir = resolve_data_dir(dataset, args.data_dir)
     n_total = dataset_length(data_dir)
-    val_idx_full = val_indices(n_total, args.val_fraction, args.split_seed)
+    val_idx_full = val_indices(
+        n_total,
+        args.val_fraction,
+        args.split_seed,
+        data_dir=data_dir,
+        dataset=dataset,
+    )
     max_w = resolve_ica_max_windows(dataset, args.max_windows)
     val_idx, subsampled = cap_val_indices(val_idx_full, max_w, args.split_seed + 17)
 

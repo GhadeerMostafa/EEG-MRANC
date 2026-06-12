@@ -17,12 +17,13 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from runtime import setup_src_path
-from torch.utils.data import DataLoader, Dataset, random_split
+from torch.utils.data import DataLoader, Dataset, Subset
 
 setup_src_path()
 
 from clinical_sanitize import sanitize_clinical_batch
-from dataset import build_train_val_dataloaders
+from dataset import build_dataloader, build_train_val_dataloaders
+from group_splits import audit_split_leakage, train_val_indices_for_dir
 from model import DEAP_SEQ_LEN, MRANC
 from validation_metrics import DEFAULT_SAMPLE_RATE, run_supervised_val_quality_metrics
 from checkpoint_paths import new_run_id, versioned_weight_path
@@ -756,27 +757,30 @@ def build_clinical_train_val_dataloaders(
         raise ValueError(f"val_fraction must be in (0, 1), got {val_fraction}")
 
     full = ClinicalMixDataset(data_dir=data_dir, storage=storage, chunk_windows=chunk_windows)
-    n_val = max(1, int(len(full) * val_fraction))
-    n_train = len(full) - n_val
-
-    train_ds, val_ds = random_split(
-        full,
-        [n_train, n_val],
-        generator=torch.Generator().manual_seed(seed),
+    train_idx, val_idx, group_ids, policy = train_val_indices_for_dir(
+        data_dir,
+        val_fraction=val_fraction,
+        split_seed=seed,
+        dataset="clinical",
     )
+    audit_split_leakage(
+        group_ids, train_idx, val_idx, split_policy=policy, label="clinical"
+    )
+    train_ds = Subset(full, train_idx.tolist())
+    val_ds = Subset(full, val_idx.tolist())
 
     if storage == "cuda" and num_workers > 0:
         raise ValueError("num_workers must be 0 when clinical dataset storage='cuda'")
 
     pin_memory = torch.cuda.is_available() and storage != "cuda"
-    train_loader = DataLoader(
+    train_loader = build_dataloader(
         train_ds,
         batch_size=batch_size,
         shuffle=True,
         num_workers=num_workers,
         pin_memory=pin_memory,
     )
-    val_loader = DataLoader(
+    val_loader = build_dataloader(
         val_ds,
         batch_size=batch_size,
         shuffle=False,
@@ -851,27 +855,30 @@ def build_artifact_benchmark_train_val_dataloaders(
         raise ValueError(f"val_fraction must be in (0, 1), got {val_fraction}")
 
     full = ArtifactBenchmarkMixDataset(data_dir=data_dir, storage=storage, chunk_windows=chunk_windows)
-    n_val = max(1, int(len(full) * val_fraction))
-    n_train = len(full) - n_val
-
-    train_ds, val_ds = random_split(
-        full,
-        [n_train, n_val],
-        generator=torch.Generator().manual_seed(seed),
+    train_idx, val_idx, group_ids, policy = train_val_indices_for_dir(
+        data_dir,
+        val_fraction=val_fraction,
+        split_seed=seed,
+        dataset="artifact_benchmark",
     )
+    audit_split_leakage(
+        group_ids, train_idx, val_idx, split_policy=policy, label="artifact_benchmark"
+    )
+    train_ds = Subset(full, train_idx.tolist())
+    val_ds = Subset(full, val_idx.tolist())
 
     if storage == "cuda" and num_workers > 0:
         raise ValueError("num_workers must be 0 when artifact_benchmark storage='cuda'")
 
     pin_memory = torch.cuda.is_available() and storage != "cuda"
-    train_loader = DataLoader(
+    train_loader = build_dataloader(
         train_ds,
         batch_size=batch_size,
         shuffle=True,
         num_workers=num_workers,
         pin_memory=pin_memory,
     )
-    val_loader = DataLoader(
+    val_loader = build_dataloader(
         val_ds,
         batch_size=batch_size,
         shuffle=False,
@@ -1042,6 +1049,7 @@ def main() -> None:
                 num_workers=args.num_workers,
                 storage=args.storage,
                 chunk_windows=args.chunk_windows,
+                dataset=dataset_mode,
             )
         model = MRANC(feature_channels=args.feature_channels).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, eps=1e-8)

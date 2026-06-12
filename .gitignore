@@ -115,6 +115,7 @@ wheels/
 
 # Raster figures
 *.png
+!docs/figures/readme/*.png
 *.jpg
 *.jpeg
 *.gif

@@ -150,8 +150,20 @@ def train_model(
     for ds in TRAIN_DATASETS:
         data_dir = resolve_data_dir(ds)
         n_total = dataset_length(data_dir)
-        tr_idx = train_indices(n_total, args.val_fraction, args.split_seed)
-        va_idx = val_indices(n_total, args.val_fraction, args.split_seed)
+        tr_idx = train_indices(
+            n_total,
+            args.val_fraction,
+            args.split_seed,
+            data_dir=data_dir,
+            dataset=ds,
+        )
+        va_idx = val_indices(
+            n_total,
+            args.val_fraction,
+            args.split_seed,
+            data_dir=data_dir,
+            dataset=ds,
+        )
         train_parts.append((data_dir, tr_idx))
         val_loaders.append(
             DataLoader(
@@ -244,7 +256,13 @@ def evaluate_dataset(
 
     data_dir = resolve_data_dir(dataset)
     n_total = dataset_length(data_dir)
-    val_idx = val_indices(n_total, args.val_fraction, args.split_seed)
+    val_idx = val_indices(
+        n_total,
+        args.val_fraction,
+        args.split_seed,
+        data_dir=data_dir,
+        dataset=dataset,
+    )
     if args.max_windows is not None:
         val_idx = val_idx[: args.max_windows]
 

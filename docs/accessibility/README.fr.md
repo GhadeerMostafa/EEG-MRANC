@@ -35,7 +35,7 @@ Les sources de données utilisées et validées dans ce dépôt sont :
 
 ## Limites et travaux futurs
 
-L'évaluation clinique de ce dépôt se limite à **CHB-MIT (PhysioNet chb01)**. Le **Temple University Hospital (TUH) EEG Corpus** n'a ni été téléchargé ni évalué ici ; il est mentionné uniquement comme cible de validation clinique inter-institutionnelle future.
+L'évaluation clinique de ce dépôt se limite à **CHB-MIT (PhysioNet chb01)**.
 
 ## Poids du modèle et évaluation
 

@@ -178,12 +178,26 @@ def main() -> None:
 
     mix_path = out_dir / "mix.npy"
     np.save(mix_path, windows.astype(np.float32, copy=False))
+    window_groups = np.zeros(windows.shape[0], dtype=np.int32)
+    np.save(out_dir / "window_groups.npy", window_groups)
     (out_dir / "channel_map.json").write_text(
-        json.dumps({"dataset": "artifact_benchmark", "deap_channels": labels}, indent=2),
+        json.dumps(
+            {
+                "dataset": "artifact_benchmark",
+                "deap_channels": labels,
+                "split_policy": "contiguous",
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    (out_dir / "split_policy.json").write_text(
+        json.dumps({"split_policy": "contiguous"}, indent=2),
         encoding="utf-8",
     )
 
     print(f"Saved {mix_path} with shape {windows.shape} (float32, microvolts)")
+    print(f"Saved window_groups.npy shape={window_groups.shape} (single recording)")
 
 
 if __name__ == "__main__":

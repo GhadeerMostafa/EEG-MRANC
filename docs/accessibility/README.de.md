@@ -35,7 +35,7 @@ In diesem Repository werden folgende Datenquellen verwendet und validiert:
 
 ## Einschränkungen und zukünftige Arbeit
 
-Die klinische Evaluation in diesem Repository beschränkt sich auf **CHB-MIT (PhysioNet chb01)**. Der **Temple University Hospital (TUH) EEG Corpus** wurde weder heruntergeladen noch evaluiert; er wird ausschließlich als Ziel für zukünftige institutionenübergreifende klinische Validierung genannt.
+Die klinische Evaluation in diesem Repository beschränkt sich auf **CHB-MIT (PhysioNet chb01)**.
 
 ## Modellgewichte und Evaluation
 

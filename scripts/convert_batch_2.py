@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import logging
 import pickle
+import re
 from pathlib import Path
 
 import numpy as np
@@ -104,6 +105,13 @@ def window_trial(trial: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray,
     )
 
 
+def parse_subject_id(dat_path: Path) -> int:
+    match = re.search(r"s(\d+)", dat_path.stem, re.IGNORECASE)
+    if not match:
+        raise ValueError(f"Could not parse subject id from {dat_path.name}")
+    return int(match.group(1))
+
+
 def main() -> None:
     args = parse_args()
     raw_dir = Path(args.raw_dir)
@@ -126,8 +134,10 @@ def main() -> None:
     all_eog: list[np.ndarray] = []
     all_emg: list[np.ndarray] = []
     all_ecg: list[np.ndarray] = []
+    all_groups: list[np.ndarray] = []
 
     for dat_path in dat_files:
+        subject_id = parse_subject_id(dat_path)
         data = load_deap_file(dat_path)  # (40, 40, 8064)
         file_windows = 0
 
@@ -138,11 +148,15 @@ def main() -> None:
             all_eog.append(eog_w)
             all_emg.append(emg_w)
             all_ecg.append(ecg_w)
+            all_groups.append(
+                np.full(mix_w.shape[0], subject_id, dtype=np.int32)
+            )
             file_windows += mix_w.shape[0]
 
         logger.info(
-            "%s -> videos=%d windows=%d",
+            "%s -> subject=%d videos=%d windows=%d",
             dat_path.name,
+            subject_id,
             data.shape[0],
             file_windows,
         )
@@ -151,6 +165,7 @@ def main() -> None:
     ref_eog = np.concatenate(all_eog, axis=0)
     ref_emg = np.concatenate(all_emg, axis=0)
     ref_ecg = np.concatenate(all_ecg, axis=0)
+    window_groups = np.concatenate(all_groups, axis=0)
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -163,8 +178,16 @@ def main() -> None:
     np.save(eog_path, ref_eog)
     np.save(emg_path, ref_emg)
     np.save(ecg_path, ref_ecg)
+    groups_path = out_dir / "window_groups.npy"
+    np.save(groups_path, window_groups)
 
     logger.info("Saved %s shape=%s", mix_path, mix.shape)
+    logger.info(
+        "Saved %s shape=%s unique_subjects=%d",
+        groups_path,
+        window_groups.shape,
+        len(np.unique(window_groups)),
+    )
     logger.info("Saved %s shape=%s", eog_path, ref_eog.shape)
     logger.info("Saved %s shape=%s", emg_path, ref_emg.shape)
     logger.info("Saved %s shape=%s", ecg_path, ref_ecg.shape)
